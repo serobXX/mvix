@@ -1,0 +1,51 @@
+.Snackbar {
+  pointer-events: all;
+  margin-bottom: 8px;
+  & > div {
+    max-width: 50vw;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    padding: 6px 18px;
+    & > div:last-child {
+      margin-right: 0px;
+      padding-left: 9px;
+    }
+  }
+  svg {
+    width: 24px;
+    height: 24px;
+    margin-right: 9px !important;
+  }
+  button {
+    height: 32px;
+    color: white;
+    font-weight: bold;
+    line-height: 32px;
+    border: solid 1px #0001;
+    box-shadow: 0 0 6px #0001;
+  }
+  #notistack-snackbar {
+    overflow-wrap: anywhere;
+  }
+}
+
+.snackbarWarning {
+  svg {
+    margin-right: 18px !important;
+  }
+  button {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
+.snackbarContainer {
+  margin-top: 70px;
+}
+
+@media screen and (max-width: 600px) {
+  .Snackbar {
+    & > div {
+      max-width: 300px;
+    }
+  }
+}

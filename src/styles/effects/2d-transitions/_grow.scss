@@ -1,0 +1,40 @@
+/* Grow */
+.hvr-grow {
+  display: inline-block;
+  vertical-align: middle;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0);
+
+  i {
+    transform: perspective(1px) translateZ(0);
+    transition-duration: 0.3s;
+    transition-property: transform;
+  }
+
+  &:hover,
+  &:focus,
+  &:active {
+    i {
+      transform: scale(1.25);
+    }
+  }
+}
+
+.hvr-grow-flip-icon {
+  display: inline-block;
+  vertical-align: middle;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0);
+
+  i {
+    transform: perspective(1px) translateZ(0) rotate(90deg);
+    transition-duration: 0.3s;
+    transition-property: transform;
+  }
+
+  &:hover,
+  &:focus,
+  &:active {
+    i {
+      transform: scale(1.25) rotate(90deg);
+    }
+  }
+}

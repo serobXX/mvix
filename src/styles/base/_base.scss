@@ -1,0 +1,62 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box !important;
+  outline: none;
+}
+
+body {
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  height: 100%;
+  width: 100vw;
+
+  #root {
+    width: inherit;
+    height: inherit;
+  }
+}
+
+img,
+svg {
+  vertical-align: top;
+}
+
+.react-select__menu {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  }
+}
+
+.react-select__menu-list::-webkit-scrollbar {
+  width: 6px;
+  height: 0;
+}
+.react-select__menu-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.react-select__menu-list::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 4px;
+}
+
+.react-select__menu-list:hover {
+  &::-webkit-scrollbar-thumb {
+    background: rgba(37, 37, 37, 0.25);
+  }
+}
+
+button.uppy-u-reset {
+  &.uppy-Dashboard-Item-action {
+    &.uppy-Dashboard-Item-action--copyLink {
+      display: none;
+    }
+  }
+}
+
+.uppy-Dashboard-Item-preview .uppy-Dashboard-Item-previewLink {
+  z-index: -1;
+}

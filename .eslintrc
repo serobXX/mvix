@@ -1,0 +1,35 @@
+{
+  "extends": [
+    "react-app"
+  ],
+  "rules": {
+    "semi": [
+      "warn",
+      "never"
+    ],
+    "no-var": "warn",
+    "no-multiple-empty-lines": "warn",
+    "jsx-quotes": [
+      "warn",
+      "prefer-double"
+    ],
+    "no-debugger": "warn",
+    "no-console": [
+      "warn",
+      {
+        "allow": [
+          "warn",
+          "error"
+        ]
+      }
+    ],
+    "no-restricted-imports": [
+      "warn",
+      {
+        "paths": [
+          "lodash"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+.opaqueEl {
+  opacity: 0.5;
+}
+
+body::-webkit-scrollbar {
+  width: 6px;
+}
+
+body::-webkit-scrollbar-thumb {
+  background: #25252550;
+  border-radius: 5px;
+}
+
+@media print {
+  .no-print,
+  .top-header {
+    display: none !important;
+  }
+  .main-container {
+    padding-top: 0 !important;
+  }
+}

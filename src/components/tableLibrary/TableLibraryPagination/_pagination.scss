@@ -1,0 +1,79 @@
+.TableLibraryPagination {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    a {
+      display: block;
+      font-size: 0;
+      color: #74809a;
+      cursor: pointer;
+      transition: all 0.4s;
+
+      &:focus {
+        outline: none;
+      }
+    }
+
+    &.disabled {
+      a {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    &.previous,
+    &.next {
+      a {
+        border: 1px solid transparent;
+        border-radius: 50%;
+      }
+
+      &:not(.disabled) {
+        a {
+          &:hover {
+            border: 1px solid #0379bb;
+            color: #0379bb;
+          }
+        }
+      }
+    }
+
+    &:not(.previous):not(.next) {
+      margin: 0 4px;
+
+      a {
+        min-width: 27px;
+        height: 27px;
+        border: 1px solid transparent;
+        font-family: 'Nunito Sanss', -apple-system, BlinkMacSystemFont,
+          'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+        font-weight: bold;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      &:not(.disabled) {
+        a {
+          &:hover {
+            border: 1px solid #0379bb;
+            color: #0379bb;
+          }
+        }
+      }
+
+      &.TableLibraryPagination_active {
+        a {
+          background: #0379bb;
+          color: #fff !important;
+        }
+      }
+    }
+  }
+}

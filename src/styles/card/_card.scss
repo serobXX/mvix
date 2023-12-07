@@ -1,0 +1,12 @@
+.Card__Container {
+  .Card__Dropdown-Icon {
+    opacity: 0;
+    transition: 0.5s;
+  }
+
+  &:hover {
+    .Card__Dropdown-Icon {
+      opacity: 1;
+    }
+  }
+}

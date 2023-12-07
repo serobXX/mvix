@@ -1,0 +1,203 @@
+# You can override the included template(s) by including variable overrides
+# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
+# Secret Detection customization: https://docs.gitlab.com/ee/user/application_security/secret_detection/#customizing-settings
+# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
+# Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
+# Note that environment variables can be set in several places
+# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
+include:
+- template: Security/SAST.gitlab-ci.yml
+- template: Code-Quality.gitlab-ci.yml
+
+variables:
+  #All available: 
+  # brakeman (Brakeman) - Ruby
+  # flawfinder (Flawfinder) - C/C++
+  # kubesec (Kubesec) - K8s
+  # mobsf (MobSF (beta)) - Android/IOS
+  # nodejs-scan (NodeJsScan)
+  # phpcs-security-audit (PHP CS security-audit)
+  # pmd-apex (PMD (Apex only))
+  # security-code-scan (Security Code Scan (.NET))
+  # semgrep (Semgrep) - Universal
+  # sobelow (Sobelow (Elixir Phoenix))
+  # spotbugs (SpotBugs with the Find Sec Bugs plugin (Ant, Gradle and wrapper, Grails, Maven and wrapper, SBT))
+  SAST_EXCLUDED_ANALYZERS: "brakeman, flawfinder, kubesec, mobsf, phpcs-security-audit, pmd-apex, security-code-scan, sobelow, spotbugs"
+
+default:
+  # All jobs are interruptible by default
+  interruptible: true
+
+stages:
+- build
+- test
+- analyze
+- deploy
+
+.default_rules:
+  ci_commit:
+    - if: $CI_COMMIT_TAG || $CI_COMMIT_BRANCH == "main"
+      variables:
+        FE_ENVIRONMENT: production
+        GENERATE_SOURCEMAP: 'false'
+      when: on_success
+    - if: $CI_COMMIT_BRANCH == "develop"
+      variables:
+        FE_ENVIRONMENT: development
+      when: on_success
+    - when: never
+  nodejstests:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+      exists:
+        - '**/package.json'
+      when: on_success
+    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE != "merge_request_event"
+      exists:
+        - '**/package.json'
+      when: on_success
+    - when: never
+  semgreptests:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+      exists:
+        - '**/*.py'
+        - '**/*.js'
+        - '**/*.jsx'
+        - '**/*.ts'
+        - '**/*.tsx'
+        - '**/*.c'
+        - '**/*.go'
+        - '**/*.java'
+        - '**/*.cs'
+        - '**/*.html'
+        - '**/*.scala'
+        - '**/*.sc'
+      when: on_success
+    - if: $CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE != "merge_request_event"
+      exists:
+        - '**/*.py'
+        - '**/*.js'
+        - '**/*.jsx'
+        - '**/*.ts'
+        - '**/*.tsx'
+        - '**/*.c'
+        - '**/*.go'
+        - '**/*.java'
+        - '**/*.cs'
+        - '**/*.html'
+        - '**/*.scala'
+        - '**/*.sc'
+      when: on_success
+    - when: never
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"  && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+    - if: $CI_COMMIT_TAG || $CI_COMMIT_BRANCH == "main"
+      variables:
+        FE_ENVIRONMENT: production
+        GENERATE_SOURCEMAP: 'false'
+    - if: $CI_COMMIT_BRANCH == "develop"
+      variables:
+        FE_ENVIRONMENT: development
+
+nodejs-scan:
+  extends: nodejs-scan-sast
+  variables:
+    SAST_EXCLUDED_PATHS: vendor
+  rules:
+    - !reference [.default_rules, nodejstests]
+  artifacts:
+    paths:
+      - gl-sast-report.json
+
+semgrep:
+  extends: semgrep-sast
+  variables:
+    SAST_EXCLUDED_PATHS: vendor
+  rules:
+    - !reference [.default_rules, semgreptests]
+  artifacts:
+    paths:
+      - gl-sast-report.json
+
+analyze-nodejs-audit:
+  stage: analyze
+  image: registry.gitlab.com/xhibitsignage-v3/xhibitsignage-v3-backend/alpine-jq:1.0
+  rules:
+    - !reference [.default_rules, nodejstests]
+  dependencies:
+    - nodejs-scan
+  variables:
+     GIT_STRATEGY: none
+  script:
+    - cat gl-sast-report.json | jq '.vulnerabilities[] | select (.severity|IN("High","Critical"))' > result.txt
+    - ls -la
+    - cat result.txt
+    - if [ -s "result.txt" ]; then exit 255; fi
+
+analyze-semgrep-audit:
+  stage: analyze
+  image: registry.gitlab.com/xhibitsignage-v3/xhibitsignage-v3-backend/alpine-jq:1.0
+  rules:
+    - !reference [.default_rules, semgreptests]
+  dependencies:
+    - semgrep
+  variables:
+     GIT_STRATEGY: none
+  script:
+    - cat gl-sast-report.json | jq '.vulnerabilities[] | select (.severity|IN("High","Critical"))' > result.txt
+    - ls -la
+    - cat result.txt
+    - if [ -s "result.txt" ]; then exit 255; fi
+
+build:
+  image: node:14
+  stage: build
+  variables:
+    NODE_OPTIONS: "--max_old_space_size=4096"
+  cache:
+  - key:
+      files:
+      - yarn.lock
+    paths:
+    - ".yarn-cache/"
+  before_script:
+  - yarn install
+  script:
+  - echo $VITE_API_URL
+  - echo $VITE_GOOGLE_CLIENT_ID
+  - yarn run build
+  artifacts:
+    paths:
+    - build
+    expire_in: 1 week
+  rules:
+    - !reference [.default_rules, ci_commit]
+  environment:
+    name: "$FE_ENVIRONMENT"
+
+deploy:
+  image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
+  stage: deploy
+  interruptible: false
+  script:
+  - echo "deploying CRM Frontend to $S3_BUCKET_NAME..."
+  - 'STS=($(aws sts assume-role-with-web-identity --role-arn ${AWS_ROLE_ARN} --role-session-name
+    "GitLabRunner-${CI_PROJECT_ID}-${CI_PIPELINE_ID}" --web-identity-token $CI_JOB_JWT_V2
+    --duration-seconds 3600 --query ''Credentials.[AccessKeyId,SecretAccessKey,SessionToken]''
+    --output text))
+
+    '
+  - export AWS_ACCESS_KEY_ID="${STS[0]}"
+  - export AWS_SECRET_ACCESS_KEY="${STS[1]}"
+  - export AWS_SESSION_TOKEN="${STS[2]}"
+  - aws sts get-caller-identity
+  - aws s3 sync ./build s3://$S3_BUCKET_NAME/ --exclude ".git*" --delete --quiet
+  - aws s3 cp ./build/index.html s3://$S3_BUCKET_NAME/
+  - aws cloudfront create-invalidation --distribution-id ${CLOUDFRONT_DISTRIBUTION_ID}
+    --paths "/*"
+  allow_failure: false
+  rules:
+    - !reference [.default_rules, ci_commit]
+  environment:
+    name: "$FE_ENVIRONMENT"
